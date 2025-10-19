@@ -28,7 +28,7 @@ export function usePosts(showToastMessage?: (message: string) => void) {
       }
       setIsPolling(true);
       
-      const response = await fetch('http://160.250.133.235/posts');
+      const response = await fetch('http://chotdon.ddnsking.com/posts');
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -114,7 +114,7 @@ export function usePosts(showToastMessage?: (message: string) => void) {
   const addPost = async (newPost: Omit<RunningPost, 'id'>) => {
     try {
       setAddingPost(true);
-      const response = await fetch('http://160.250.133.235/posts', {
+      const response = await fetch('http://chotdon.ddnsking.com/posts', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -173,7 +173,7 @@ export function usePosts(showToastMessage?: (message: string) => void) {
       setBulkProgress({ current: i + 1, total: newPosts.length });
       
       try {
-        const response = await fetch('http://160.250.133.235/posts', {
+        const response = await fetch('http://chotdon.ddnsking.com/posts', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -245,7 +245,7 @@ export function usePosts(showToastMessage?: (message: string) => void) {
     const newIsRunning = !item.isVisible;
     
     try {
-      const response = await fetch(`http://160.250.133.235/posts/${id}`, {
+      const response = await fetch(`http://chotdon.ddnsking.com/posts/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -315,7 +315,7 @@ export function usePosts(showToastMessage?: (message: string) => void) {
 
   const deletePost = async (id: string) => {
     try {
-      const response = await fetch(`http://160.250.133.235/posts/${id}`, {
+      const response = await fetch(`http://chotdon.ddnsking.com/posts/${id}`, {
         method: 'DELETE',
       });
 
@@ -343,7 +343,7 @@ export function usePosts(showToastMessage?: (message: string) => void) {
 
   const updatePost = async (id: string, data: { name: string; link: string }) => {
     try {
-      const response = await fetch(`http://160.250.133.235/posts/${id}`, {
+      const response = await fetch(`http://chotdon.ddnsking.com/posts/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -391,7 +391,7 @@ export function usePosts(showToastMessage?: (message: string) => void) {
     if (selectedItems.length === 0) return;
 
     const deletePromises = selectedItems.map(item =>
-      fetch(`http://160.250.133.235/posts/${item.id}`, {
+      fetch(`http://chotdon.ddnsking.com/posts/${item.id}`, {
         method: 'DELETE',
       })
     );

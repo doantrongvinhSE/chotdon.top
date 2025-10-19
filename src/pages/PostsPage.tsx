@@ -96,7 +96,7 @@ export default function PostsPage() {
       setComments([]);
       setCommentsPage(1);
       setCurrentPostTitle(postTitle);
-      const resp = await fetch(`http://160.250.133.235/posts/comments/${feedback}`);
+      const resp = await fetch(`http://chotdon.ddnsking.com/posts/comments/${feedback}`);
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       const json = await resp.json();
       const data: ApiComment[] = json?.data ?? [];
@@ -161,7 +161,7 @@ export default function PostsPage() {
     try {
       console.log('Updating comment status:', { commentId, status });
       
-      const response = await fetch('http://160.250.133.235/comments/update', {
+      const response = await fetch('http://chotdon.ddnsking.com/comments/update', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

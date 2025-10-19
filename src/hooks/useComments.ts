@@ -28,7 +28,7 @@ export function useComments(showToastMessage?: (message: string) => void) {
   const fetchComments = async (silent = false) => {
     try {
       if (!silent) setLoading(true);
-      const response = await fetch('http://160.250.133.235/comments?timestamp=true');
+      const response = await fetch('http://chotdon.ddnsking.com/comments?timestamp=true');
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -63,7 +63,7 @@ export function useComments(showToastMessage?: (message: string) => void) {
 
   const fetchTodayCount = async () => {
     try {
-      const response = await fetch('http://160.250.133.235/comments/count-today');
+      const response = await fetch('http://chotdon.ddnsking.com/comments/count-today');
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -115,7 +115,7 @@ export function useComments(showToastMessage?: (message: string) => void) {
 
   const updateCommentStatus = async (commentId: string, newStatus: CommentStatus) => {
     try {
-      const response = await fetch('http://160.250.133.235/comments/update', {
+      const response = await fetch('http://chotdon.ddnsking.com/comments/update', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

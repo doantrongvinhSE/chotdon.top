@@ -17,7 +17,7 @@ export function useOrders(showToastMessage?: (message: string) => void) {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://160.250.133.235/orders');
+      const response = await fetch('http://chotdon.ddnsking.com/orders');
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -84,7 +84,7 @@ export function useOrders(showToastMessage?: (message: string) => void) {
   const addOrder = async (orderData: Omit<Order, 'id' | 'createdAt'>) => {
     try {
       setAddingOrder(true);
-      const response = await fetch('http://160.250.133.235/orders', {
+      const response = await fetch('http://chotdon.ddnsking.com/orders', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -122,7 +122,7 @@ export function useOrders(showToastMessage?: (message: string) => void) {
   const updateOrder = async (id: number, orderData: Omit<Order, 'id' | 'createdAt'>) => {
     try {
       setUpdatingOrder(true);
-      const response = await fetch(`http://160.250.133.235/orders/${id}`, {
+      const response = await fetch(`http://chotdon.ddnsking.com/orders/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -162,7 +162,7 @@ export function useOrders(showToastMessage?: (message: string) => void) {
   const deleteOrder = async (id: number) => {
     try {
       setDeletingOrder(true);
-      const response = await fetch(`http://160.250.133.235/orders/${id}`, {
+      const response = await fetch(`http://chotdon.ddnsking.com/orders/${id}`, {
         method: 'DELETE',
       });
 
