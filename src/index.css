@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global background để tránh nền trắng */
+body {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0b1020 0%, #0a0e1a 50%, #070b13 100%);
+  background-attachment: fixed;
+}
+
+/* Đảm bảo html cũng có background */
+html {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0b1020 0%, #0a0e1a 50%, #070b13 100%);
+  background-attachment: fixed;
+}
