@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Order, OrdersResponse } from '../types/posts';
+import { API_ENDPOINTS } from '../config/api';
 
 export function useOrders(showToastMessage?: (message: string) => void) {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -17,7 +18,7 @@ export function useOrders(showToastMessage?: (message: string) => void) {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://chotdon.ddnsking.com/orders');
+      const response = await fetch(API_ENDPOINTS.ORDERS);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -84,7 +85,7 @@ export function useOrders(showToastMessage?: (message: string) => void) {
   const addOrder = async (orderData: Omit<Order, 'id' | 'createdAt'>) => {
     try {
       setAddingOrder(true);
-      const response = await fetch('http://chotdon.ddnsking.com/orders', {
+      const response = await fetch(API_ENDPOINTS.ORDERS, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -122,7 +123,7 @@ export function useOrders(showToastMessage?: (message: string) => void) {
   const updateOrder = async (id: number, orderData: Omit<Order, 'id' | 'createdAt'>) => {
     try {
       setUpdatingOrder(true);
-      const response = await fetch(`http://chotdon.ddnsking.com/orders/${id}`, {
+      const response = await fetch(`${API_ENDPOINTS.ORDERS}/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -162,7 +163,7 @@ export function useOrders(showToastMessage?: (message: string) => void) {
   const deleteOrder = async (id: number) => {
     try {
       setDeletingOrder(true);
-      const response = await fetch(`http://chotdon.ddnsking.com/orders/${id}`, {
+      const response = await fetch(`${API_ENDPOINTS.ORDERS}/${id}`, {
         method: 'DELETE',
       });
 

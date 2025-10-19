@@ -14,6 +14,7 @@ import { AutoPollingIndicator } from '../components/ui/AutoPollingIndicator';
 import { ExportButton } from '../components/ui/ExportButton';
 import { EditPostModal } from '../components/forms/EditPostModal';
 import CreateOrderModal from '../components/forms/CreateOrderModal';
+import { API_ENDPOINTS } from '../config/api';
 
 export default function PostsPage() {
   const {
@@ -96,7 +97,7 @@ export default function PostsPage() {
       setComments([]);
       setCommentsPage(1);
       setCurrentPostTitle(postTitle);
-      const resp = await fetch(`http://chotdon.ddnsking.com/posts/comments/${feedback}`);
+      const resp = await fetch(`${API_ENDPOINTS.POSTS}/comments/${feedback}`);
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       const json = await resp.json();
       const data: ApiComment[] = json?.data ?? [];
@@ -161,7 +162,7 @@ export default function PostsPage() {
     try {
       console.log('Updating comment status:', { commentId, status });
       
-      const response = await fetch('http://chotdon.ddnsking.com/comments/update', {
+      const response = await fetch(`${API_ENDPOINTS.COMMENTS}/update`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

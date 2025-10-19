@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Comment, CommentStatus } from '../types/posts';
+import { API_ENDPOINTS } from '../config/api';
 
 export function useComments(showToastMessage?: (message: string) => void) {
   const [comments, setComments] = useState<Comment[]>([]);
@@ -28,7 +29,7 @@ export function useComments(showToastMessage?: (message: string) => void) {
   const fetchComments = async (silent = false) => {
     try {
       if (!silent) setLoading(true);
-      const response = await fetch('http://chotdon.ddnsking.com/comments?timestamp=true');
+      const response = await fetch(`${API_ENDPOINTS.COMMENTS}?timestamp=true`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -63,7 +64,7 @@ export function useComments(showToastMessage?: (message: string) => void) {
 
   const fetchTodayCount = async () => {
     try {
-      const response = await fetch('http://chotdon.ddnsking.com/comments/count-today');
+      const response = await fetch(`${API_ENDPOINTS.COMMENTS}/count-today`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -115,7 +116,7 @@ export function useComments(showToastMessage?: (message: string) => void) {
 
   const updateCommentStatus = async (commentId: string, newStatus: CommentStatus) => {
     try {
-      const response = await fetch('http://chotdon.ddnsking.com/comments/update', {
+      const response = await fetch(`${API_ENDPOINTS.COMMENTS}/update`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
