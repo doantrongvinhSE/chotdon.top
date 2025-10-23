@@ -32,7 +32,7 @@ export function mapApiPostToRunningPost(apiPost: ApiPost): RunningPost {
     url: apiPost.link,
     title: apiPost.name,
     isVisible: apiPost.is_running,
-    commentCountToday: Math.floor(Math.random() * 20), // Mock data for now
+    commentCountToday: apiPost.count_today,
     lastCommentAt: new Date(apiPost.updatedAt),
     status: apiPost.is_running ? 'Đang chạy' : 'Tạm dừng',
     feedback: apiPost.feedback,

@@ -140,7 +140,7 @@ export function usePosts(showToastMessage?: (message: string) => void) {
           url: apiPost.link,
           title: apiPost.name,
           isVisible: apiPost.is_running,
-          commentCountToday: 0,
+          commentCountToday: apiPost.count_today || 0,
           lastCommentAt: new Date(apiPost.updatedAt),
           status: apiPost.is_running ? 'Đang chạy' : 'Tạm dừng',
         };
@@ -199,7 +199,7 @@ export function usePosts(showToastMessage?: (message: string) => void) {
             url: apiPost.link,
             title: apiPost.name,
             isVisible: apiPost.is_running,
-            commentCountToday: 0,
+            commentCountToday: apiPost.count_today || 0,
             lastCommentAt: new Date(apiPost.updatedAt),
             status: apiPost.is_running ? 'Đang chạy' : 'Tạm dừng',
           };

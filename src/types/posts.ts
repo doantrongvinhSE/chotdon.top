@@ -19,6 +19,7 @@ export type ApiPost = {
   updatedAt: string;
   is_running: boolean;
   id_user: number;
+  count_today: number;
 };
 
 export type CommentStatus = 'normal' | 'fail' | 'success';

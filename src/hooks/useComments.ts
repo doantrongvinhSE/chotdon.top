@@ -23,6 +23,7 @@ export function useComments(showToastMessage?: (message: string) => void) {
     return saved ? JSON.parse(saved) : false;
   });
   const [previousCommentCount, setPreviousCommentCount] = useState<number>(0);
+  const [filterChanged, setFilterChanged] = useState<boolean>(false);
   const itemsPerPage = 10;
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -207,16 +208,19 @@ export function useComments(showToastMessage?: (message: string) => void) {
   // Filter comments by date range
   const filterCommentsByDate = (startDate: string, endDate: string) => {
     setDateFilter({ startDate, endDate });
+    setFilterChanged(true);
   };
 
   const clearDateFilter = () => {
     setDateFilter(null);
+    setFilterChanged(true);
   };
 
   const togglePhoneFilter = () => {
     const newValue = !phoneFilter;
     setPhoneFilter(newValue);
     localStorage.setItem('comments-phone-filter', JSON.stringify(newValue));
+    setFilterChanged(true);
   };
 
   const toggleNotifications = () => {
@@ -270,8 +274,16 @@ export function useComments(showToastMessage?: (message: string) => void) {
     setComments(filtered);
     setTotalItems(filtered.length);
     setTotalPages(Math.ceil(filtered.length / itemsPerPage));
-    setCurrentPage(1);
-  }, [dateFilter, phoneFilter, allComments, applyDateFilter, applyPhoneFilter]);
+    
+    // Chỉ reset về trang 1 khi:
+    // 1. Filter thực sự thay đổi (người dùng thao tác)
+    // 2. Hoặc currentPage vượt quá totalPages mới
+    const newTotalPages = Math.ceil(filtered.length / itemsPerPage);
+    if (filterChanged || (currentPage > newTotalPages && newTotalPages > 0)) {
+      setCurrentPage(1);
+      setFilterChanged(false); // Reset flag sau khi đã xử lý
+    }
+  }, [dateFilter, phoneFilter, allComments, applyDateFilter, applyPhoneFilter, currentPage, filterChanged]);
 
   // Check for new comments and play notification sound
   useEffect(() => {
