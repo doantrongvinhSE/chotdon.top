@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Comment } from '../../types/posts';
+import { Comment, AddressDetail } from '../../types/posts';
 import { X, ShoppingCart } from 'lucide-react';
+import AddressSelector from '../ui/AddressSelector';
 
 interface CreateOrderModalProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface CreateOrderModalProps {
     customer_name: string;
     phone: string;
     address: string;
+    addressDetail?: AddressDetail;
     note: string;
   }) => Promise<void>;
   loading?: boolean;
@@ -31,6 +33,14 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
     note: '',
   });
 
+  const [addressDetail, setAddressDetail] = useState<AddressDetail>({
+    province: null,
+    district: null,
+    ward: null,
+    street: '',
+    fullAddress: '',
+  });
+
   // Tự động điền form từ comment khi modal mở
   useEffect(() => {
     if (comment && isOpen) {
@@ -47,7 +57,13 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await onSubmit(formData);
+      // Sử dụng địa chỉ chi tiết nếu có, ngược lại dùng địa chỉ đơn giản
+      const addressToUse = addressDetail.fullAddress || formData.address;
+      await onSubmit({
+        ...formData,
+        address: addressToUse,
+        addressDetail: addressDetail.fullAddress ? addressDetail : undefined,
+      });
       onClose();
     } catch (error) {
       // Error handling được thực hiện trong parent component
@@ -88,36 +104,40 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Tên sản phẩm *
-            </label>
-            <input
-              type="text"
-              name="product_name"
-              value={formData.product_name}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-              placeholder="Nhập tên sản phẩm"
-            />
+          {/* First row - Product name and Customer name */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Tên sản phẩm *
+              </label>
+              <input
+                type="text"
+                name="product_name"
+                value={formData.product_name}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                placeholder="Nhập tên sản phẩm"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Tên khách hàng *
+              </label>
+              <input
+                type="text"
+                name="customer_name"
+                value={formData.customer_name}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                placeholder="Nhập tên khách hàng"
+              />
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Tên khách hàng *
-            </label>
-            <input
-              type="text"
-              name="customer_name"
-              value={formData.customer_name}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-              placeholder="Nhập tên khách hàng"
-            />
-          </div>
-
+          {/* Second row - Phone */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Số điện thoại *
@@ -135,19 +155,31 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Địa chỉ *
+              Địa chỉ giao hàng *
             </label>
-            <input
-              type="text"
-              name="address"
-              value={formData.address}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-              placeholder="Nhập địa chỉ giao hàng"
+            <AddressSelector
+              value={addressDetail}
+              onChange={setAddressDetail}
+              placeholder="Chọn địa chỉ giao hàng"
             />
+            
+            {/* Fallback input cho địa chỉ đơn giản */}
+            <div className="mt-3">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Hoặc nhập địa chỉ thủ công
+              </label>
+              <input
+                type="text"
+                name="address"
+                value={formData.address}
+                onChange={handleChange}
+                className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                placeholder="Nhập địa chỉ giao hàng"
+              />
+            </div>
           </div>
 
+          {/* Third row - Note */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Ghi chú

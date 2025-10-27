@@ -4,7 +4,6 @@ import { API_ENDPOINTS } from '../config/api';
 
 export function useComments(showToastMessage?: (message: string) => void) {
   const [comments, setComments] = useState<Comment[]>([]);
-  const [allComments, setAllComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -23,25 +22,52 @@ export function useComments(showToastMessage?: (message: string) => void) {
     return saved ? JSON.parse(saved) : false;
   });
   const [previousCommentCount, setPreviousCommentCount] = useState<number>(0);
-  const [filterChanged, setFilterChanged] = useState<boolean>(false);
-  const itemsPerPage = 10;
+  const [itemsPerPage, setItemsPerPage] = useState<number>(10);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const currentPageRef = useRef<number>(currentPage);
 
-  const fetchComments = async (silent = false) => {
+  const fetchComments = useCallback(async (silent = false, page = currentPage) => {
     try {
       if (!silent) setLoading(true);
-      const response = await fetch(`${API_ENDPOINTS.COMMENTS}?timestamp=true`);
+      
+      // Tạo query parameters
+      const params = new URLSearchParams({
+        sort: 'timestamp',
+        page: page.toString(),
+        limit: itemsPerPage.toString()
+      });
+      
+      // Thêm filter parameters nếu có
+      if (dateFilter) {
+        params.append('startDate', dateFilter.startDate);
+        params.append('endDate', dateFilter.endDate);
+      }
+      
+      if (phoneFilter) {
+        params.append('phoneFilter', 'true');
+      }
+      
+      const response = await fetch(`${API_ENDPOINTS.COMMENTS}?${params.toString()}`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const result = await response.json();
       
       if (result.success && result.data) {
-        setAllComments(result.data);
+        // API trả về dữ liệu đã được phân trang
+        setComments(result.data); // result.data là array comments
+        setTotalItems(result.pagination?.totalItems || result.data.length);
+        const apiItemsPerPage = result.pagination?.itemsPerPage || itemsPerPage;
+        setTotalPages(result.pagination?.totalPages || Math.ceil((result.pagination?.totalItems || result.data.length) / apiItemsPerPage));
+        
+        // Cập nhật itemsPerPage từ API response
+        if (result.pagination?.itemsPerPage) {
+          setItemsPerPage(result.pagination.itemsPerPage);
+        }
         
         // Chỉ reset page khi không phải silent refresh (polling)
         if (!silent) {
-          setCurrentPage(1);
+          setCurrentPage(page);
         }
         
         setError(null);
@@ -61,7 +87,7 @@ export function useComments(showToastMessage?: (message: string) => void) {
     } finally {
       if (!silent) setLoading(false);
     }
-  };
+  }, [currentPage, dateFilter, phoneFilter, itemsPerPage]);
 
   const fetchTodayCount = async () => {
     try {
@@ -82,15 +108,20 @@ export function useComments(showToastMessage?: (message: string) => void) {
   useEffect(() => {
     fetchComments();
     fetchTodayCount();
-  }, []);
+  }, [fetchComments]);
+
+  // Cập nhật currentPageRef khi currentPage thay đổi
+  useEffect(() => {
+    currentPageRef.current = currentPage;
+  }, [currentPage]);
 
   // Real-time polling effect
   useEffect(() => {
     if (isRealTime) {
       intervalRef.current = setInterval(() => {
-        fetchComments(true); // Silent refresh
+        fetchComments(true, currentPageRef.current); // Silent refresh với trang hiện tại từ ref
         fetchTodayCount(); // Fetch today count
-      }, 5000); // Poll every 5 seconds
+      }, 1500); // Poll every 5 seconds
     } else {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
@@ -104,7 +135,7 @@ export function useComments(showToastMessage?: (message: string) => void) {
         intervalRef.current = null;
       }
     };
-  }, [isRealTime]);
+  }, [isRealTime, fetchComments]); // Thêm fetchComments vào dependency
 
   // Cleanup on unmount
   useEffect(() => {
@@ -163,11 +194,9 @@ export function useComments(showToastMessage?: (message: string) => void) {
     }
   };
 
-  // Get paginated comments
+  // Comments đã được phân trang từ API, không cần phân trang client-side nữa
   const getPaginatedComments = () => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return comments.slice(startIndex, endIndex);
+    return comments;
   };
 
   const toggleRealTime = () => {
@@ -182,45 +211,30 @@ export function useComments(showToastMessage?: (message: string) => void) {
     });
   };
 
-  // Apply date filter to comments
-  const applyDateFilter = useCallback((commentsToFilter: Comment[]) => {
-    if (!dateFilter) return commentsToFilter;
-    
-    return commentsToFilter.filter(comment => {
-      const commentDate = new Date(comment.timestamp);
-      const start = new Date(dateFilter.startDate);
-      const end = new Date(dateFilter.endDate);
-      
-      start.setHours(0, 0, 0, 0);
-      end.setHours(23, 59, 59, 999);
-      
-      return commentDate >= start && commentDate <= end;
-    });
-  }, [dateFilter]);
-
-  // Apply phone filter to comments
-  const applyPhoneFilter = useCallback((commentsToFilter: Comment[]) => {
-    if (!phoneFilter) return commentsToFilter;
-    
-    return commentsToFilter.filter(comment => comment.phone && comment.phone.trim() !== '');
-  }, [phoneFilter]);
+  // Các hàm filter client-side đã được loại bỏ vì API xử lý filter
 
   // Filter comments by date range
   const filterCommentsByDate = (startDate: string, endDate: string) => {
     setDateFilter({ startDate, endDate });
-    setFilterChanged(true);
+    setCurrentPage(1); // Reset về trang 1 khi filter
+    currentPageRef.current = 1; // Cập nhật ref
+    fetchComments(false, 1); // Gọi API với filter mới
   };
 
   const clearDateFilter = () => {
     setDateFilter(null);
-    setFilterChanged(true);
+    setCurrentPage(1); // Reset về trang 1 khi clear filter
+    currentPageRef.current = 1; // Cập nhật ref
+    fetchComments(false, 1); // Gọi API không có filter
   };
 
   const togglePhoneFilter = () => {
     const newValue = !phoneFilter;
     setPhoneFilter(newValue);
     localStorage.setItem('comments-phone-filter', JSON.stringify(newValue));
-    setFilterChanged(true);
+    setCurrentPage(1); // Reset về trang 1 khi toggle filter
+    currentPageRef.current = 1; // Cập nhật ref
+    fetchComments(false, 1); // Gọi API với filter mới
   };
 
   const toggleNotifications = () => {
@@ -257,46 +271,27 @@ export function useComments(showToastMessage?: (message: string) => void) {
     }
   }, [notificationsEnabled]);
 
-  // Apply filter when dateFilter, phoneFilter or allComments change
-  useEffect(() => {
-    let filtered = allComments;
-    
-    // Apply date filter first
-    if (dateFilter) {
-      filtered = applyDateFilter(filtered);
-    }
-    
-    // Apply phone filter
-    if (phoneFilter) {
-      filtered = applyPhoneFilter(filtered);
-    }
-    
-    setComments(filtered);
-    setTotalItems(filtered.length);
-    setTotalPages(Math.ceil(filtered.length / itemsPerPage));
-    
-    // Chỉ reset về trang 1 khi:
-    // 1. Filter thực sự thay đổi (người dùng thao tác)
-    // 2. Hoặc currentPage vượt quá totalPages mới
-    const newTotalPages = Math.ceil(filtered.length / itemsPerPage);
-    if (filterChanged || (currentPage > newTotalPages && newTotalPages > 0)) {
-      setCurrentPage(1);
-      setFilterChanged(false); // Reset flag sau khi đã xử lý
-    }
-  }, [dateFilter, phoneFilter, allComments, applyDateFilter, applyPhoneFilter, currentPage, filterChanged]);
+  // Không cần filter client-side nữa vì API đã xử lý filter
+  // Logic filter đã được chuyển vào các hàm filterCommentsByDate, clearDateFilter, togglePhoneFilter
 
   // Check for new comments and play notification sound
   useEffect(() => {
-    if (allComments.length > previousCommentCount && previousCommentCount > 0) {
+    if (comments.length > previousCommentCount && previousCommentCount > 0) {
       // New comment detected, play notification sound
       playNotificationSound();
     }
-    setPreviousCommentCount(allComments.length);
-  }, [allComments.length, previousCommentCount, playNotificationSound]);
+    setPreviousCommentCount(comments.length);
+  }, [comments.length, previousCommentCount, playNotificationSound]);
+
+  // Hàm để thay đổi trang và gọi API
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    currentPageRef.current = page; // Cập nhật ref ngay lập tức
+    fetchComments(false, page);
+  };
 
   return {
     comments: getPaginatedComments(),
-    allComments: comments,
     loading,
     error,
     currentPage,
@@ -310,7 +305,7 @@ export function useComments(showToastMessage?: (message: string) => void) {
     phoneFilter,
     updateCommentStatus,
     fetchComments,
-    setCurrentPage,
+    setCurrentPage: handlePageChange,
     toggleRealTime,
     filterCommentsByDate,
     clearDateFilter,

@@ -50,7 +50,8 @@ export type Order = {
   product_name: string;
   customer_name: string;
   phone: string;
-  address: string;
+  address: string; // Giữ lại để tương thích với API hiện tại
+  addressDetail?: AddressDetail; // Thêm địa chỉ chi tiết
   note: string;
   createdAt: string;
 };
@@ -58,4 +59,39 @@ export type Order = {
 export type OrdersResponse = {
   success: boolean;
   data: Order[];
+};
+
+// Types cho API địa chỉ Việt Nam (provinces.open-api.vn)
+export type Province = {
+  name: string;
+  code: number;
+  division_type: string;
+  codename: string;
+  phone_code: number;
+  districts: District[];
+};
+
+export type District = {
+  name: string;
+  code: number;
+  division_type: string;
+  codename: string;
+  province_code: number;
+  wards: Ward[];
+};
+
+export type Ward = {
+  name: string;
+  code: number;
+  division_type: string;
+  codename: string;
+  district_code: number;
+};
+
+export type AddressDetail = {
+  province: Province | null;
+  district: District | null;
+  ward: Ward | null;
+  street: string;
+  fullAddress: string;
 };

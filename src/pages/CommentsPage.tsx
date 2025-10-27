@@ -45,7 +45,8 @@ const CommentsPage: React.FC = () => {
   const { addOrder, addingOrder } = useOrders(showToastMessage);
 
   const handleRefresh = () => {
-    fetchComments();
+    setCurrentPage(1);
+    fetchComments(false, 1);
   };
 
   const handleCreateOrder = (comment: Comment) => {

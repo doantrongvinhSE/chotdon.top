@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save } from 'lucide-react';
-import { Order } from '../../types/posts';
+import { Order, AddressDetail } from '../../types/posts';
+import AddressSelector from '../ui/AddressSelector';
 
 interface OrderFormProps {
   order?: Order | null;
@@ -25,6 +26,14 @@ const OrderForm: React.FC<OrderFormProps> = ({
     note: ''
   });
 
+  const [addressDetail, setAddressDetail] = useState<AddressDetail>({
+    province: null,
+    district: null,
+    ward: null,
+    street: '',
+    fullAddress: '',
+  });
+
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -36,6 +45,19 @@ const OrderForm: React.FC<OrderFormProps> = ({
         address: order.address,
         note: order.note || ''
       });
+      
+      // Load address detail if available
+      if (order.addressDetail) {
+        setAddressDetail(order.addressDetail);
+      } else {
+        setAddressDetail({
+          province: null,
+          district: null,
+          ward: null,
+          street: '',
+          fullAddress: '',
+        });
+      }
     } else {
       setFormData({
         product_name: '',
@@ -43,6 +65,13 @@ const OrderForm: React.FC<OrderFormProps> = ({
         phone: '',
         address: '',
         note: ''
+      });
+      setAddressDetail({
+        province: null,
+        district: null,
+        ward: null,
+        street: '',
+        fullAddress: '',
       });
     }
     setErrors({});
@@ -81,7 +110,13 @@ const OrderForm: React.FC<OrderFormProps> = ({
     }
 
     try {
-      await onSave(formData);
+      // Sử dụng địa chỉ chi tiết nếu có, ngược lại dùng địa chỉ đơn giản
+      const addressToUse = addressDetail.fullAddress || formData.address;
+      await onSave({
+        ...formData,
+        address: addressToUse,
+        addressDetail: addressDetail.fullAddress ? addressDetail : undefined,
+      });
       onClose();
     } catch (error) {
       console.error('Error saving order:', error);
@@ -116,6 +151,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {/* First row - Product name and Customer name */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -154,29 +190,43 @@ const OrderForm: React.FC<OrderFormProps> = ({
                 <p className="mt-1 text-sm text-red-400">{errors.customer_name}</p>
               )}
             </div>
+          </div>
 
+          {/* Second row - Phone */}
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Số điện thoại *
+            </label>
+            <input
+              type="tel"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              className={`w-full px-3 py-2 bg-gray-700 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                errors.phone ? 'border-red-500' : 'border-gray-600'
+              }`}
+              placeholder="Nhập số điện thoại"
+            />
+            {errors.phone && (
+              <p className="mt-1 text-sm text-red-400">{errors.phone}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Địa chỉ giao hàng *
+            </label>
+            <AddressSelector
+              value={addressDetail}
+              onChange={setAddressDetail}
+              placeholder="Chọn địa chỉ giao hàng"
+              className="mb-3"
+            />
+            
+            {/* Fallback input cho địa chỉ đơn giản */}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                Số điện thoại *
-              </label>
-              <input
-                type="tel"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                className={`w-full px-3 py-2 bg-gray-700 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.phone ? 'border-red-500' : 'border-gray-600'
-                }`}
-                placeholder="Nhập số điện thoại"
-              />
-              {errors.phone && (
-                <p className="mt-1 text-sm text-red-400">{errors.phone}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Địa chỉ *
+                Hoặc nhập địa chỉ thủ công
               </label>
               <input
                 type="text"
@@ -194,6 +244,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
             </div>
           </div>
 
+          {/* Third row - Note */}
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
               Ghi chú
