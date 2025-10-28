@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { ShoppingCart, RefreshCw } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { ShoppingCart, RefreshCw, Trash2 } from 'lucide-react';
 import { useOrders } from '../hooks/useOrders';
 import OrdersTable from '../components/tables/OrdersTable';
 import { Pagination } from '../components/ui/Pagination';
@@ -13,7 +13,9 @@ const OrdersPage: React.FC = () => {
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
   const [deletingOrder, setDeletingOrder] = useState<Order | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [showBulkConfirmDialog, setShowBulkConfirmDialog] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
   const showToastMessage = (message: string) => {
     setToastMessage(message);
@@ -38,6 +40,12 @@ const OrdersPage: React.FC = () => {
     deleteOrder,
     clearFilters,
   } = useOrders(showToastMessage);
+
+  const currentPageIds = useMemo(() => orders.map(o => o.id), [orders]);
+  const allSelected = useMemo(
+    () => currentPageIds.length > 0 && currentPageIds.every(id => selectedIds.includes(id)),
+    [currentPageIds, selectedIds]
+  );
 
   const handleEditOrder = (order: Order) => {
     setEditingOrder(order);
@@ -76,6 +84,39 @@ const OrdersPage: React.FC = () => {
     setDeletingOrder(null);
   };
 
+  const handleToggleSelectAll = (checked: boolean) => {
+    if (checked) {
+      const merged = Array.from(new Set([...selectedIds, ...currentPageIds]));
+      setSelectedIds(merged);
+    } else {
+      const remaining = selectedIds.filter(id => !currentPageIds.includes(id));
+      setSelectedIds(remaining);
+    }
+  };
+
+  const handleToggleSelectOne = (orderId: number, checked: boolean) => {
+    setSelectedIds(prev => {
+      if (checked) return prev.includes(orderId) ? prev : [...prev, orderId];
+      return prev.filter(id => id !== orderId);
+    });
+  };
+
+  const openBulkDelete = () => {
+    if (selectedIds.length === 0) return;
+    setShowBulkConfirmDialog(true);
+  };
+
+  const handleConfirmBulkDelete = async () => {
+    try {
+      const idsToDelete = [...selectedIds];
+      await Promise.all(idsToDelete.map(id => deleteOrder(id)));
+      setSelectedIds(prev => prev.filter(id => !idsToDelete.includes(id)));
+      setShowBulkConfirmDialog(false);
+    } catch (error) {
+      console.error('Error bulk deleting orders:', error);
+    }
+  };
+
   return (
     <div className="min-h-full p-4 lg:p-8">
       {/* Header */}
@@ -89,15 +130,26 @@ const OrdersPage: React.FC = () => {
             </p>
           </div>
         </div>
-        
-        <button
-          onClick={fetchOrders}
-          disabled={loading}
-          className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 text-white rounded-lg transition-colors"
-        >
-          <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-          Làm mới
-        </button>
+        <div className="flex items-center gap-2">
+          {selectedIds.length > 0 && (
+            <button
+              onClick={openBulkDelete}
+              disabled={isDeletingOrder}
+              className="flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-800 text-white rounded-full transition-colors"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Xóa đã chọn ({selectedIds.length})
+            </button>
+          )}
+          <button
+            onClick={fetchOrders}
+            disabled={loading}
+            className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 text-white rounded-full transition-colors"
+          >
+            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Làm mới
+          </button>
+        </div>
       </div>
 
       {/* Error Message */}
@@ -134,6 +186,10 @@ const OrdersPage: React.FC = () => {
           onEdit={handleEditOrder}
           onDelete={handleDeleteOrder}
           deletingOrder={isDeletingOrder}
+          selectedIds={selectedIds}
+          allSelected={allSelected}
+          onToggleSelectAll={handleToggleSelectAll}
+          onToggleSelectOne={handleToggleSelectOne}
         />
       </div>
 
@@ -168,6 +224,19 @@ const OrdersPage: React.FC = () => {
         cancelText="Hủy"
         onConfirm={handleConfirmDelete}
         onCancel={handleCloseConfirmDialog}
+        loading={isDeletingOrder}
+        type="danger"
+      />
+
+      {/* Confirm Bulk Delete Dialog */}
+      <ConfirmDialog
+        isOpen={showBulkConfirmDialog}
+        title="Xác nhận xóa nhiều đơn hàng"
+        message={`Bạn có chắc chắn muốn xóa ${selectedIds.length} đơn hàng đã chọn?`}
+        confirmText="Xóa"
+        cancelText="Hủy"
+        onConfirm={handleConfirmBulkDelete}
+        onCancel={() => setShowBulkConfirmDialog(false)}
         loading={isDeletingOrder}
         type="danger"
       />

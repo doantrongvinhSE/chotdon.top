@@ -82,7 +82,7 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-white border border-gray-200 rounded-2xl p-6 w-full max-w-md shadow-2xl">
+      <div className="bg-white border border-gray-200 rounded-2xl p-6 w-full max-w-3xl shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-3">
@@ -104,98 +104,103 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* First row - Product name and Customer name */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Tên sản phẩm *
-              </label>
-              <input
-                type="text"
-                name="product_name"
-                value={formData.product_name}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                placeholder="Nhập tên sản phẩm"
-              />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Left column */}
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Tên sản phẩm *
+                </label>
+                <input
+                  type="text"
+                  name="product_name"
+                  value={formData.product_name}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  placeholder="Nhập tên sản phẩm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Tên khách hàng *
+                </label>
+                <input
+                  type="text"
+                  name="customer_name"
+                  value={formData.customer_name}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  placeholder="Nhập tên khách hàng"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Số điện thoại *
+                </label>
+                <input
+                  type="tel"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  placeholder="Nhập số điện thoại"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Ghi chú
+                </label>
+                <textarea
+                  name="note"
+                  value={formData.note}
+                  onChange={handleChange}
+                  rows={6}
+                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 resize-none"
+                  placeholder="Nhập ghi chú (tùy chọn)"
+                />
+              </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Tên khách hàng *
-              </label>
-              <input
-                type="text"
-                name="customer_name"
-                value={formData.customer_name}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                placeholder="Nhập tên khách hàng"
-              />
+            {/* Right column */}
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Địa chỉ giao hàng *
+                </label>
+                <AddressSelector
+                  value={addressDetail}
+                  onChange={setAddressDetail}
+                  placeholder="Chọn địa chỉ giao hàng"
+                />
+
+                {/* Fallback input cho địa chỉ đơn giản */}
+                <div className="mt-3">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Hoặc nhập địa chỉ thủ công
+                  </label>
+                  <input
+                    type="text"
+                    name="address"
+                    value={formData.address}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    placeholder="Nhập địa chỉ giao hàng"
+                  />
+                </div>
+              </div>
+
+              
             </div>
-          </div>
-
-          {/* Second row - Phone */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Số điện thoại *
-            </label>
-            <input
-              type="tel"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-              placeholder="Nhập số điện thoại"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Địa chỉ giao hàng *
-            </label>
-            <AddressSelector
-              value={addressDetail}
-              onChange={setAddressDetail}
-              placeholder="Chọn địa chỉ giao hàng"
-            />
-            
-            {/* Fallback input cho địa chỉ đơn giản */}
-            <div className="mt-3">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Hoặc nhập địa chỉ thủ công
-              </label>
-              <input
-                type="text"
-                name="address"
-                value={formData.address}
-                onChange={handleChange}
-                className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                placeholder="Nhập địa chỉ giao hàng"
-              />
-            </div>
-          </div>
-
-          {/* Third row - Note */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Ghi chú
-            </label>
-            <textarea
-              name="note"
-              value={formData.note}
-              onChange={handleChange}
-              rows={3}
-              className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 resize-none"
-              placeholder="Nhập ghi chú (tùy chọn)"
-            />
           </div>
 
           {/* Actions */}
-          <div className="flex space-x-3 pt-4">
+          <div className="flex space-x-3 pt-4 md:col-span-2">
             <button
               type="button"
               onClick={onClose}

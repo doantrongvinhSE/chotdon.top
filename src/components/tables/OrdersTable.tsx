@@ -1,6 +1,7 @@
 import React from 'react';
 import { Order } from '../../types/posts';
 import { Phone, MapPin, Calendar, Package, User, Edit, Trash2, MoreVertical } from 'lucide-react';
+import { SoftCheckbox } from '../ui/SoftCheckbox';
 
 interface OrdersTableProps {
   orders: Order[];
@@ -8,6 +9,11 @@ interface OrdersTableProps {
   onEdit?: (order: Order) => void;
   onDelete?: (order: Order) => void;
   deletingOrder?: boolean;
+  // Selection controls (optional)
+  selectedIds?: number[];
+  allSelected?: boolean;
+  onToggleSelectAll?: (checked: boolean) => void;
+  onToggleSelectOne?: (orderId: number, checked: boolean) => void;
 }
 
 const OrdersTable: React.FC<OrdersTableProps> = ({ 
@@ -15,7 +21,11 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
   loading, 
   onEdit, 
   onDelete, 
-  deletingOrder = false 
+  deletingOrder = false,
+  selectedIds = [],
+  allSelected = false,
+  onToggleSelectAll,
+  onToggleSelectOne,
 }) => {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -49,12 +59,23 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
   }
 
   return (
-    <div className="bg-gray-800 rounded-lg overflow-hidden">
+    <div className="bg-gray-800 rounded-xl overflow-hidden ring-1 ring-gray-700/50 shadow-lg">
       {/* Desktop Table */}
       <div className="hidden lg:block overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-gray-700">
+          <thead className="bg-gray-700 sticky top-0 z-10">
             <tr>
+              {(onToggleSelectAll || onToggleSelectOne) && (
+                <th className="px-4 py-4 w-12">
+                  {onToggleSelectAll && (
+                    <SoftCheckbox
+                      checked={allSelected}
+                      onChange={() => onToggleSelectAll(true !== allSelected)}
+                      label="Chọn tất cả"
+                    />
+                  )}
+                </th>
+              )}
               <th className="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                 ID
               </th>
@@ -83,7 +104,19 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
           </thead>
           <tbody className="bg-gray-800 divide-y divide-gray-700">
             {orders.map((order) => (
-              <tr key={order.id} className="hover:bg-gray-700 transition-colors">
+              <tr
+                key={order.id}
+                className={`${selectedIds.includes(order.id) ? 'bg-blue-900/20 ring-1 ring-blue-500/20' : 'hover:bg-gray-700'} transition-colors`}
+              >
+                {(onToggleSelectAll || onToggleSelectOne) && (
+                  <td className="px-4 py-4">
+                    <SoftCheckbox
+                      checked={selectedIds.includes(order.id)}
+                      onChange={() => onToggleSelectOne && onToggleSelectOne(order.id, !selectedIds.includes(order.id))}
+                      label={`Chọn đơn #${order.id}`}
+                    />
+                  </td>
+                )}
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                   #{order.id}
                 </td>
@@ -110,7 +143,7 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
                     {onEdit && (
                       <button
                         onClick={() => onEdit(order)}
-                        className="p-2 text-blue-400 hover:text-blue-300 hover:bg-blue-900/20 rounded-lg transition-colors"
+                        className="px-3 py-1.5 text-blue-300 hover:text-white bg-blue-500/10 hover:bg-blue-600/30 rounded-full transition-colors"
                         title="Chỉnh sửa"
                       >
                         <Edit className="w-4 h-4" />
@@ -120,7 +153,7 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
                       <button
                         onClick={() => onDelete(order)}
                         disabled={deletingOrder}
-                        className="p-2 text-red-400 hover:text-red-300 hover:bg-red-900/20 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
+                        className="px-3 py-1.5 text-red-300 hover:text-white bg-red-500/10 hover:bg-red-600/30 disabled:opacity-50 disabled:cursor-not-allowed rounded-full transition-colors"
                         title="Xóa"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -137,13 +170,20 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
       {/* Mobile Cards */}
       <div className="lg:hidden">
         {orders.map((order) => (
-          <div key={order.id} className="border-b border-gray-700 p-4 hover:bg-gray-700 transition-colors">
+          <div key={order.id} className={`border-b border-gray-700 p-4 hover:bg-gray-700 transition-colors ${selectedIds.includes(order.id) ? 'bg-blue-900/20 ring-1 ring-blue-500/20' : ''} rounded-xl m-2`}> 
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center">
                 <Package className="w-5 h-5 text-blue-400 mr-2" />
                 <span className="text-sm font-medium text-gray-300">#{order.id}</span>
               </div>
               <div className="flex items-center space-x-2">
+                {(onToggleSelectAll || onToggleSelectOne) && (
+                  <SoftCheckbox
+                    checked={selectedIds.includes(order.id)}
+                    onChange={() => onToggleSelectOne && onToggleSelectOne(order.id, !selectedIds.includes(order.id))}
+                    label={`Chọn đơn #${order.id}`}
+                  />
+                )}
                 <span className="text-xs text-gray-400">
                   {formatDate(order.createdAt)}
                 </span>
@@ -152,7 +192,7 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
                     {onEdit && (
                       <button
                         onClick={() => onEdit(order)}
-                        className="p-1.5 text-blue-400 hover:text-blue-300 hover:bg-blue-900/20 rounded transition-colors"
+                        className="px-2 py-1 text-blue-300 hover:text-white bg-blue-500/10 hover:bg-blue-600/30 rounded-full transition-colors"
                         title="Chỉnh sửa"
                       >
                         <Edit className="w-4 h-4" />
@@ -162,7 +202,7 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
                       <button
                         onClick={() => onDelete(order)}
                         disabled={deletingOrder}
-                        className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-900/20 disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors"
+                        className="px-2 py-1 text-red-300 hover:text-white bg-red-500/10 hover:bg-red-600/30 disabled:opacity-50 disabled:cursor-not-allowed rounded-full transition-colors"
                         title="Xóa"
                       >
                         <Trash2 className="w-4 h-4" />

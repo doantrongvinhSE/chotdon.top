@@ -86,7 +86,7 @@ export default function PostsPage() {
     content: string;
     phone: string | null;
     timestamp: string;
-    status: 'normal' | 'fail' | 'success';
+    status: 'normal' | 'fail' | 'success' | 'isCalling';
     id_post: string;
   };
 

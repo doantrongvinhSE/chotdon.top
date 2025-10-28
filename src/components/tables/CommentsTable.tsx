@@ -34,6 +34,7 @@ const CommentsTable: React.FC<CommentsTableProps> = ({
   const [copiedPhone, setCopiedPhone] = useState<string | null>(null);
   const [copiedPost, setCopiedPost] = useState<string | null>(null);
   const [copiedUid, setCopiedUid] = useState<string | null>(null);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   const thPad = compact ? 'px-2 py-1.5' : 'px-4 py-3';
   const tdPad = compact ? 'px-2 py-1.5' : 'px-4 py-4';
@@ -205,9 +206,19 @@ const CommentsTable: React.FC<CommentsTableProps> = ({
                   </td>
                   <td className={`${tdPad} text-sm text-gray-300 align-center`}>
                     <div className="flex items-start space-x-1">
-                      <div className={`truncate whitespace-nowrap overflow-hidden flex-1`} title={comment.post.name}>
-                        {abbreviate(comment.post.name, compact ? 25 : 40)}
-                      </div>
+                      {comment.post.link ? (
+                        <button
+                          onClick={() => window.open(comment.post.link, '_blank')}
+                          className={`truncate whitespace-nowrap overflow-hidden flex-1 text-left hover:text-blue-400 underline-offset-2 hover:underline`}
+                          title={`Mở bài viết: ${comment.post.link}`}
+                        >
+                          {abbreviate(comment.post.name, compact ? 25 : 40)}
+                        </button>
+                      ) : (
+                        <div className={`truncate whitespace-nowrap overflow-hidden flex-1`} title={comment.post.name}>
+                          {abbreviate(comment.post.name, compact ? 25 : 40)}
+                        </div>
+                      )}
                       <button
                         onClick={() => copyPost(comment.post.name)}
                         className={`${compact ? 'p-0.5' : 'p-1'} hover:bg-gray-700 rounded transition-colors flex-shrink-0`}
@@ -274,8 +285,18 @@ const CommentsTable: React.FC<CommentsTableProps> = ({
                   <td className={`${tdPad} whitespace-nowrap`}>
                     <StatusDropdown
                       currentStatus={comment.status}
-                      onStatusChange={(status) => onStatusChange(comment.id, status)}
+                      onStatusChange={async (status) => {
+                        if (updatingId) return;
+                        setUpdatingId(comment.id);
+                        try {
+                          await onStatusChange(comment.id, status);
+                        } finally {
+                          setUpdatingId(null);
+                        }
+                      }}
                       compact={compact}
+                      loading={updatingId === comment.id}
+                      disabled={updatingId !== null}
                     />
                   </td>
                   <td className={`${tdPad} whitespace-nowrap`}>

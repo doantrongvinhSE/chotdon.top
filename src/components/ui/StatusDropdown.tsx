@@ -7,6 +7,7 @@ interface StatusDropdownProps {
   onStatusChange: (status: CommentStatus) => void;
   disabled?: boolean;
   compact?: boolean;
+  loading?: boolean;
 }
 
 const statusOptions = [
@@ -18,6 +19,15 @@ const statusOptions = [
     hoverColor: 'hover:bg-gray-600',
     bgColor: 'bg-gray-50',
     textColor: 'text-gray-700'
+  },
+  { 
+    value: 'isCalling' as CommentStatus, 
+    label: 'Đang gọi điện', 
+    color: 'bg-yellow-500 text-white border-yellow-500',
+    icon: '📞',
+    hoverColor: 'hover:bg-yellow-600',
+    bgColor: 'bg-yellow-50',
+    textColor: 'text-yellow-700'
   },
   { 
     value: 'success' as CommentStatus, 
@@ -44,6 +54,7 @@ const StatusDropdown: React.FC<StatusDropdownProps> = ({
   onStatusChange, 
   disabled = false,
   compact = false,
+  loading = false,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState<'bottom' | 'top'>('bottom');
@@ -55,7 +66,7 @@ const StatusDropdown: React.FC<StatusDropdownProps> = ({
   };
 
   const handleToggle = () => {
-    if (disabled) return;
+    if (disabled || loading) return;
     
     // Check if dropdown should open upward
     const button = document.activeElement as HTMLElement;
@@ -79,7 +90,7 @@ const StatusDropdown: React.FC<StatusDropdownProps> = ({
       {/* Trigger Button */}
       <button
         onClick={handleToggle}
-        disabled={disabled}
+        disabled={disabled || loading}
         className={`
           flex items-center space-x-2 ${compact ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} rounded-lg font-medium transition-all duration-200
           focus:outline-none focus:ring-2 focus:ring-blue-500/50
@@ -87,14 +98,21 @@ const StatusDropdown: React.FC<StatusDropdownProps> = ({
           ${currentOption?.color || 'bg-gray-500 text-white border-gray-500'}
           hover:scale-105 active:scale-95 border shadow-sm
         `}
+        aria-busy={loading}
       >
-        <span className={compact ? 'text-xs' : 'text-sm'}>{currentOption?.icon}</span>
+        {loading ? (
+          <span className={`inline-block ${compact ? 'w-3 h-3' : 'w-4 h-4'} border-2 border-white/60 border-t-transparent rounded-full animate-spin`} />
+        ) : (
+          <span className={compact ? 'text-xs' : 'text-sm'}>{currentOption?.icon}</span>
+        )}
         <span className={`${compact ? 'max-w-20' : 'max-w-24'} truncate`}>{currentOption?.label}</span>
-        <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+        {!loading && (
+          <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+        )}
       </button>
 
       {/* Dropdown Menu */}
-      {isOpen && (
+      {isOpen && !loading && (
         <div className={`absolute ${dropdownPosition === 'top' ? 'bottom-full mb-1' : 'top-full mt-1'} left-0 ${compact ? 'w-40' : 'w-48'} bg-white border border-gray-200 rounded-lg shadow-lg z-[999999] overflow-hidden`}>
           {statusOptions.map((option) => (
             <button

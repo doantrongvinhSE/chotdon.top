@@ -22,7 +22,7 @@ export type ApiPost = {
   count_today: number;
 };
 
-export type CommentStatus = 'normal' | 'fail' | 'success';
+export type CommentStatus = 'normal' | 'fail' | 'success' | 'isCalling';
 
 export type Comment = {
   id: string;

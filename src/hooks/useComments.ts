@@ -179,7 +179,8 @@ export function useComments(showToastMessage?: (message: string) => void) {
           const statusText = {
             'normal': 'Bình thường',
             'success': 'Chốt thành công', 
-            'fail': 'Chốt thất bại'
+            'fail': 'Chốt thất bại',
+            'isCalling': 'Đang gọi điện',
           }[newStatus];
           showToastMessage(`Đã cập nhật trạng thái thành: ${statusText}`);
         }
