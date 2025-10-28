@@ -44,7 +44,7 @@ export function useComments(showToastMessage?: (message: string) => void) {
       }
       
       if (phoneFilter) {
-        params.append('phoneFilter', 'true');
+        params.append('phone', 'true');
       }
       
       const response = await fetch(`${API_ENDPOINTS.COMMENTS}?${params.toString()}`);

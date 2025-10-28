@@ -124,7 +124,6 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
 
             <div className="mt-6 text-center">
               <p className="text-gray-400 text-sm">
-                Demo: nguyendang123@gmail.com / 123456
               </p>
             </div>
           </div>
