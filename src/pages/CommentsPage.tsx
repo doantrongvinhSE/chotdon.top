@@ -162,6 +162,7 @@ const CommentsPage: React.FC = () => {
         onPageChange={setCurrentPage}
         onCreateOrder={handleCreateOrder}
         compact={false}
+        onShowToast={showToastMessage}
       />
 
       {/* Create Order Modal */}

@@ -16,6 +16,7 @@ interface CommentsTableProps {
   onPageChange: (page: number) => void;
   onCreateOrder?: (comment: Comment) => void;
   compact?: boolean;
+  onShowToast?: (message: string) => void;
 }
 
 const CommentsTable: React.FC<CommentsTableProps> = ({
@@ -30,6 +31,7 @@ const CommentsTable: React.FC<CommentsTableProps> = ({
   onPageChange,
   onCreateOrder,
   compact = false,
+  onShowToast,
 }) => {
   const [copiedPhone, setCopiedPhone] = useState<string | null>(null);
   const [copiedPost, setCopiedPost] = useState<string | null>(null);
@@ -50,8 +52,14 @@ const CommentsTable: React.FC<CommentsTableProps> = ({
       await navigator.clipboard.writeText(phone);
       setCopiedPhone(phone);
       setTimeout(() => setCopiedPhone(null), 2000);
+      if (onShowToast) {
+        onShowToast(`Đã copy số điện thoại: ${phone}`);
+      }
     } catch (err) {
       console.error('Failed to copy phone:', err);
+      if (onShowToast) {
+        onShowToast('Không thể copy số điện thoại');
+      }
     }
   };
 
@@ -264,20 +272,18 @@ const CommentsTable: React.FC<CommentsTableProps> = ({
                   </td>
                   <td className={`${tdPad} whitespace-nowrap text-sm text-gray-400`}>
                     {comment.phone ? (
-                      <div className="flex items-center space-x-1">
-                        <span className={compact ? 'text-xs' : ''}>{comment.phone}</span>
-                        <button
-                          onClick={() => copyPhone(comment.phone!)}
-                          className={`${compact ? 'p-0.5' : 'p-1'} hover:bg-gray-700 rounded transition-colors`}
-                          title="Copy số điện thoại"
-                        >
-                          {copiedPhone === comment.phone ? (
-                            <Check className={`${compact ? 'w-3 h-3' : 'w-4 h-4'} text-green-400`} />
-                          ) : (
-                            <Copy className={`${compact ? 'w-3 h-3' : 'w-4 h-4'} text-gray-400 hover:text-white`} />
-                          )}
-                        </button>
-                      </div>
+                      <button
+                        onClick={() => copyPhone(comment.phone!)}
+                        className={`flex items-center space-x-1 hover:text-blue-400 transition-colors ${compact ? 'text-xs' : ''}`}
+                        title="Click để copy số điện thoại"
+                      >
+                        <span>{comment.phone}</span>
+                        {copiedPhone === comment.phone ? (
+                          <Check className={`${compact ? 'w-3 h-3' : 'w-4 h-4'} text-green-400`} />
+                        ) : (
+                          <Copy className={`${compact ? 'w-3 h-3' : 'w-4 h-4'} text-gray-400 hover:text-white`} />
+                        )}
+                      </button>
                     ) : (
                       '-'
                     )}

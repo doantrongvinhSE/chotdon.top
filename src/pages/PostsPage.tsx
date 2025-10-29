@@ -372,6 +372,7 @@ export default function PostsPage() {
                 onPageChange={(p) => setCommentsPage(p)}
                 compact
                 onCreateOrder={handleCreateOrder}
+                onShowToast={showToastMessage}
               />
             </div>
             {/* Create Order Modal in PostsPage */}
