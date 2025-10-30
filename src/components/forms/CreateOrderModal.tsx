@@ -49,7 +49,7 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
         customer_name: comment.fb_name || '',
         phone: comment.phone || '',
         address: '', // Địa chỉ cần nhập thủ công
-        note: '',
+        note: comment.content || '',
       });
     }
   }, [comment, isOpen]);

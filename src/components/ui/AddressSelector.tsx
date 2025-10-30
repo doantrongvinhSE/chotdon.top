@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ChevronDown, MapPin } from 'lucide-react';
 import { useAddress } from '../../hooks/useAddress';
 import { Province, District, Ward, AddressDetail } from '../../types/posts';
+import { Combobox } from '@headlessui/react';
 
 interface AddressSelectorProps {
   value: AddressDetail;
@@ -30,13 +31,13 @@ const AddressSelector: React.FC<AddressSelectorProps> = ({
     resetWards,
   } = useAddress();
 
-  const [isProvinceOpen, setIsProvinceOpen] = useState(false);
-  const [isDistrictOpen, setIsDistrictOpen] = useState(false);
-  const [isWardOpen, setIsWardOpen] = useState(false);
   const [selectedProvince, setSelectedProvince] = useState<Province | null>(value.province);
   const [selectedDistrict, setSelectedDistrict] = useState<District | null>(value.district);
   const [selectedWard, setSelectedWard] = useState<Ward | null>(value.ward);
   const [street, setStreet] = useState(value.street || '');
+  const [provinceSearch, setProvinceSearch] = useState('');
+  const [districtSearch, setDistrictSearch] = useState('');
+  const [wardSearch, setWardSearch] = useState('');
 
   // Update local state when value prop changes
   useEffect(() => {
@@ -128,6 +129,11 @@ const AddressSelector: React.FC<AddressSelectorProps> = ({
 
   const displayText = value.fullAddress || placeholder;
 
+  // Lọc danh sách theo từ khóa tìm kiếm
+  const filteredProvinces = provinces.filter(p => p.name.toLowerCase().includes(provinceSearch.toLowerCase()));
+  const filteredDistricts = districts.filter(d => d.name.toLowerCase().includes(districtSearch.toLowerCase()));
+  const filteredWards = wards.filter(w => w.name.toLowerCase().includes(wardSearch.toLowerCase()));
+
   return (
     <div className={`relative ${className}`}>
       <div className="space-y-4">
@@ -152,49 +158,43 @@ const AddressSelector: React.FC<AddressSelectorProps> = ({
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Tỉnh/Thành phố *
             </label>
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => {
-                  setIsProvinceOpen(!isProvinceOpen);
-                  setIsDistrictOpen(false);
-                  setIsWardOpen(false);
-                }}
-                className={`w-full px-4 py-3 bg-white border rounded-xl text-left text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 flex items-center justify-between ${
-                  error ? 'border-red-500' : 'border-gray-300'
-                }`}
-              >
-                <span className={selectedProvince ? 'text-gray-900' : 'text-gray-500'}>
-                  {selectedProvince ? selectedProvince.name : 'Chọn tỉnh/thành phố'}
-                </span>
-                <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform ${isProvinceOpen ? 'rotate-180' : ''}`} />
-              </button>
-              
-              {isProvinceOpen && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+            <Combobox value={selectedProvince} onChange={async (province) => {
+                await handleProvinceSelect(province);
+                setProvinceSearch('');
+              }} disabled={loading}>
+              <div className="relative">
+                <Combobox.Input
+                  className="w-full px-4 py-3 bg-white border rounded-xl text-gray-900 border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  displayValue={(prov: Province|null) => prov ? prov.name : ''}
+                  placeholder="Chọn tỉnh/thành phố"
+                  onChange={e => setProvinceSearch(e.target.value)}
+                  autoComplete="off"
+                />
+                <Combobox.Button className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer">
+                  <ChevronDown className="w-5 h-5 text-gray-400" />
+                </Combobox.Button>
+                <Combobox.Options className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-xl shadow-lg max-h-60 overflow-y-auto">
                   {loading ? (
                     <div className="px-4 py-3 text-center text-gray-500">
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-green-500 mx-auto"></div>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-green-500 mx-auto" />
                       <span className="ml-2">Đang tải...</span>
                     </div>
-                  ) : (
-                    provinces.map((province) => (
-                      <button
-                        key={province.code}
-                        type="button"
-                        onClick={() => {
-                          handleProvinceSelect(province);
-                          setIsProvinceOpen(false);
-                        }}
-                        className="w-full px-4 py-3 text-left hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
-                      >
-                        {province.name}
-                      </button>
-                    ))
-                  )}
-                </div>
-              )}
-            </div>
+                  ) : filteredProvinces.length === 0 ? (
+                    <div className="px-4 py-2 text-gray-500">Không tìm thấy</div>
+                  ) : filteredProvinces.map(province => (
+                    <Combobox.Option
+                      key={province.code}
+                      value={province}
+                      className={({ active }) =>
+                        `w-full px-4 py-3 text-left ${active ? 'bg-green-100' : ''}`
+                      }
+                    >
+                      {province.name}
+                    </Combobox.Option>
+                  ))}
+                </Combobox.Options>
+              </div>
+            </Combobox>
           </div>
 
           {/* District selector */}
@@ -202,50 +202,44 @@ const AddressSelector: React.FC<AddressSelectorProps> = ({
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Quận/Huyện *
             </label>
-            <div className="relative">
-              <button
-                type="button"
-                disabled={!selectedProvince || districts.length === 0}
-                onClick={() => {
-                  setIsDistrictOpen(!isDistrictOpen);
-                  setIsProvinceOpen(false);
-                  setIsWardOpen(false);
-                }}
-                className={`w-full px-4 py-3 bg-white border rounded-xl text-left text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 flex items-center justify-between ${
-                  !selectedProvince || districts.length === 0 ? 'bg-gray-100 cursor-not-allowed' : ''
-                } ${error ? 'border-red-500' : 'border-gray-300'}`}
-              >
-                <span className={selectedDistrict ? 'text-gray-900' : 'text-gray-500'}>
-                  {selectedDistrict ? selectedDistrict.name : 'Chọn quận/huyện'}
-                </span>
-                <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform ${isDistrictOpen ? 'rotate-180' : ''}`} />
-              </button>
-              
-              {isDistrictOpen && selectedProvince && districts.length > 0 && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+            <Combobox value={selectedDistrict} onChange={async (d) => {
+                await handleDistrictSelect(d);
+                setDistrictSearch('');
+              }}
+              disabled={!selectedProvince || loading || districts.length === 0}>
+              <div className="relative">
+                <Combobox.Input
+                  className="w-full px-4 py-3 bg-white border rounded-xl text-gray-900 border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  displayValue={(d: District|null) => d ? d.name : ''}
+                  placeholder="Chọn quận/huyện"
+                  onChange={e => setDistrictSearch(e.target.value)}
+                  autoComplete="off"
+                />
+                <Combobox.Button className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer">
+                  <ChevronDown className="w-5 h-5 text-gray-400" />
+                </Combobox.Button>
+                <Combobox.Options className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-xl shadow-lg max-h-60 overflow-y-auto">
                   {loading ? (
                     <div className="px-4 py-3 text-center text-gray-500">
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-green-500 mx-auto"></div>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-green-500 mx-auto" />
                       <span className="ml-2">Đang tải...</span>
                     </div>
-                  ) : (
-                    districts.map((district) => (
-                      <button
-                        key={district.code}
-                        type="button"
-                        onClick={() => {
-                          handleDistrictSelect(district);
-                          setIsDistrictOpen(false);
-                        }}
-                        className="w-full px-4 py-3 text-left hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
-                      >
-                        {district.name}
-                      </button>
-                    ))
-                  )}
-                </div>
-              )}
-            </div>
+                  ) : filteredDistricts.length === 0 ? (
+                    <div className="px-4 py-2 text-gray-500">Không tìm thấy</div>
+                  ) : filteredDistricts.map(district => (
+                    <Combobox.Option
+                      key={district.code}
+                      value={district}
+                      className={({ active }) =>
+                        `w-full px-4 py-3 text-left ${active ? 'bg-green-100' : ''}`
+                      }
+                    >
+                      {district.name}
+                    </Combobox.Option>
+                  ))}
+                </Combobox.Options>
+              </div>
+            </Combobox>
           </div>
 
           {/* Ward selector */}
@@ -253,50 +247,43 @@ const AddressSelector: React.FC<AddressSelectorProps> = ({
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Phường/Xã *
             </label>
-            <div className="relative">
-              <button
-                type="button"
-                disabled={!selectedDistrict || wards.length === 0}
-                onClick={() => {
-                  setIsWardOpen(!isWardOpen);
-                  setIsProvinceOpen(false);
-                  setIsDistrictOpen(false);
-                }}
-                className={`w-full px-4 py-3 bg-white border rounded-xl text-left text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 flex items-center justify-between ${
-                  !selectedDistrict || wards.length === 0 ? 'bg-gray-100 cursor-not-allowed' : ''
-                } ${error ? 'border-red-500' : 'border-gray-300'}`}
-              >
-                <span className={selectedWard ? 'text-gray-900' : 'text-gray-500'}>
-                  {selectedWard ? selectedWard.name : 'Chọn phường/xã'}
-                </span>
-                <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform ${isWardOpen ? 'rotate-180' : ''}`} />
-              </button>
-              
-              {isWardOpen && selectedDistrict && wards.length > 0 && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+            <Combobox value={selectedWard} onChange={(w) => {
+                handleWardSelect(w);
+                setWardSearch('');
+              }} disabled={!selectedDistrict || loading || wards.length === 0}>
+              <div className="relative">
+                <Combobox.Input
+                  className="w-full px-4 py-3 bg-white border rounded-xl text-gray-900 border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  displayValue={(w: Ward|null) => w ? w.name : ''}
+                  placeholder="Chọn phường/xã"
+                  onChange={e => setWardSearch(e.target.value)}
+                  autoComplete="off"
+                />
+                <Combobox.Button className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer">
+                  <ChevronDown className="w-5 h-5 text-gray-400" />
+                </Combobox.Button>
+                <Combobox.Options className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-xl shadow-lg max-h-60 overflow-y-auto">
                   {loading ? (
                     <div className="px-4 py-3 text-center text-gray-500">
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-green-500 mx-auto"></div>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-green-500 mx-auto" />
                       <span className="ml-2">Đang tải...</span>
                     </div>
-                  ) : (
-                    wards.map((ward) => (
-                      <button
-                        key={ward.code}
-                        type="button"
-                        onClick={() => {
-                          handleWardSelect(ward);
-                          setIsWardOpen(false);
-                        }}
-                        className="w-full px-4 py-3 text-left hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
-                      >
-                        {ward.name}
-                      </button>
-                    ))
-                  )}
-                </div>
-              )}
-            </div>
+                  ) : filteredWards.length === 0 ? (
+                    <div className="px-4 py-2 text-gray-500">Không tìm thấy</div>
+                  ) : filteredWards.map(ward => (
+                    <Combobox.Option
+                      key={ward.code}
+                      value={ward}
+                      className={({ active }) =>
+                        `w-full px-4 py-3 text-left ${active ? 'bg-green-100' : ''}`
+                      }
+                    >
+                      {ward.name}
+                    </Combobox.Option>
+                  ))}
+                </Combobox.Options>
+              </div>
+            </Combobox>
           </div>
         </div>
 

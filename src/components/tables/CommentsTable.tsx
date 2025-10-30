@@ -47,6 +47,12 @@ const CommentsTable: React.FC<CommentsTableProps> = ({
     return text.length > actualMaxLength ? `${text.slice(0, actualMaxLength)}...` : text;
   };
 
+  const abbreviateUrl = (url: string, maxLength = 48) => {
+    if (url.length <= maxLength) return url;
+    const keep = Math.floor((maxLength - 3) / 2);
+    return url.slice(0, keep) + '...' + url.slice(-keep);
+  };
+
   const copyPhone = async (phone: string) => {
     try {
       await navigator.clipboard.writeText(phone);
@@ -151,7 +157,7 @@ const CommentsTable: React.FC<CommentsTableProps> = ({
           </div>
         </div>
 
-        <div className={`overflow-x-auto overflow-y-visible ${compact ? 'pb-24' : 'pb-32'} relative`}>
+        <div className={`overflow-x-auto overflow-y-visible ${compact ? 'pb-24' : 'pb-40'} relative`}>
           <table className={`min-w-full ${compact ? 'table-auto' : 'table-fixed'}`}>
             <colgroup>
               {compact ? (
@@ -213,31 +219,39 @@ const CommentsTable: React.FC<CommentsTableProps> = ({
                     {formatTimestamp(comment.timestamp)}
                   </td>
                   <td className={`${tdPad} text-sm text-gray-300 align-center`}>
-                    <div className="flex items-start space-x-1">
-                      {comment.post.link ? (
-                        <button
-                          onClick={() => window.open(comment.post.link, '_blank')}
-                          className={`truncate whitespace-nowrap overflow-hidden flex-1 text-left hover:text-blue-400 underline-offset-2 hover:underline`}
-                          title={`Mở bài viết: ${comment.post.link}`}
+                    <div className="flex flex-col items-start gap-1 max-w-full">
+                      <div className="flex items-center w-full gap-2 max-w-full">
+                        <span
+                          className="truncate font-semibold max-w-[220px] md:max-w-[380px]"
+                          title={comment.post.name}
                         >
                           {abbreviate(comment.post.name, compact ? 25 : 40)}
+                        </span>
+                        <button
+                          onClick={() => copyPost(comment.post.name)}
+                          className={`${compact ? 'p-0.5' : 'p-1'} hover:bg-gray-700 rounded transition-colors flex-shrink-0`}
+                          title="Copy tên bài viết"
+                          tabIndex={-1}
+                        >
+                          {copiedPost === comment.post.name ? (
+                            <Check className={`${compact ? 'w-4 h-4' : 'w-5 h-5'} text-green-400`} />
+                          ) : (
+                            <Copy className={`${compact ? 'w-4 h-4' : 'w-5 h-5'} text-gray-400 hover:text-white`} />
+                          )}
                         </button>
-                      ) : (
-                        <div className={`truncate whitespace-nowrap overflow-hidden flex-1`} title={comment.post.name}>
-                          {abbreviate(comment.post.name, compact ? 25 : 40)}
-                        </div>
+                      </div>
+                      {comment.post.link && (
+                        <a
+                          href={comment.post.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-blue-400 underline underline-offset-2 hover:text-blue-300 hover:underline py-0.5 px-0 mt-0.5 break-all"
+                          style={{marginLeft: 0}}
+                          title={comment.post.link}
+                        >
+                          {abbreviateUrl(comment.post.link)}
+                        </a>
                       )}
-                      <button
-                        onClick={() => copyPost(comment.post.name)}
-                        className={`${compact ? 'p-0.5' : 'p-1'} hover:bg-gray-700 rounded transition-colors flex-shrink-0`}
-                        title="Copy tên bài viết"
-                      >
-                        {copiedPost === comment.post.name ? (
-                          <Check className={`${compact ? 'w-3 h-3' : 'w-4 h-4'} text-green-400`} />
-                        ) : (
-                          <Copy className={`${compact ? 'w-3 h-3' : 'w-4 h-4'} text-gray-400 hover:text-white`} />
-                        )}
-                      </button>
                     </div>
                   </td>
                   <td className={`${tdPad} text-sm text-gray-400 font-mono align-center`}> 
@@ -267,7 +281,7 @@ const CommentsTable: React.FC<CommentsTableProps> = ({
                   </td>
                   <td className={`${tdPad} text-sm text-gray-300 align-center`}>
                     <div className={`truncate whitespace-nowrap overflow-hidden`} title={comment.content}>
-                      {abbreviate(comment.content, compact ? 30 : 30)}
+                      {abbreviate(comment.content, 70)}
                     </div>
                   </td>
                   <td className={`${tdPad} whitespace-nowrap text-sm text-gray-400`}>
