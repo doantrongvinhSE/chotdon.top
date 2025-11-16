@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Order } from '../../types/posts';
-import { Phone, MapPin, Calendar, Package, User, Edit, Trash2, MoreVertical } from 'lucide-react';
+import { Phone, MapPin, Calendar, Package, User, Edit, Trash2, MoreVertical, Copy, Check } from 'lucide-react';
 import { SoftCheckbox } from '../ui/SoftCheckbox';
 
 interface OrdersTableProps {
@@ -14,6 +14,7 @@ interface OrdersTableProps {
   allSelected?: boolean;
   onToggleSelectAll?: (checked: boolean) => void;
   onToggleSelectOne?: (orderId: number, checked: boolean) => void;
+  onShowToast?: (message: string) => void;
 }
 
 const OrdersTable: React.FC<OrdersTableProps> = ({ 
@@ -26,7 +27,10 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
   allSelected = false,
   onToggleSelectAll,
   onToggleSelectOne,
+  onShowToast,
 }) => {
+  const [copiedField, setCopiedField] = useState<{ orderId: number; field: string } | null>(null);
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleString('vi-VN', {
@@ -35,6 +39,26 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
       day: '2-digit',
       timeZone: 'UTC'
     });
+  };
+
+  const copyToClipboard = async (text: string, orderId: number, field: string, fieldLabel: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedField({ orderId, field });
+      setTimeout(() => setCopiedField(null), 2000);
+      if (onShowToast) {
+        onShowToast(`Đã copy ${fieldLabel}`);
+      }
+    } catch (err) {
+      console.error('Failed to copy:', err);
+      if (onShowToast) {
+        onShowToast('Không thể copy dữ liệu');
+      }
+    }
+  };
+
+  const isCopied = (orderId: number, field: string) => {
+    return copiedField?.orderId === orderId && copiedField?.field === field;
   };
 
   if (loading) {
@@ -122,13 +146,52 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
                   {order.product_name}
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-300">
-                  {order.customer_name}
+                  <div className="flex items-center gap-2">
+                    <span>{order.customer_name}</span>
+                    <button
+                      onClick={() => copyToClipboard(order.customer_name, order.id, 'customer', 'tên khách hàng')}
+                      className="p-1 text-gray-400 hover:text-blue-400 transition-colors"
+                      title="Copy tên khách hàng"
+                    >
+                      {isCopied(order.id, 'customer') ? (
+                        <Check className="w-3.5 h-3.5 text-green-400" />
+                      ) : (
+                        <Copy className="w-3.5 h-3.5" />
+                      )}
+                    </button>
+                  </div>
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-300">
-                  {order.phone}
+                  <div className="flex items-center gap-2">
+                    <span>{order.phone}</span>
+                    <button
+                      onClick={() => copyToClipboard(order.phone, order.id, 'phone', 'số điện thoại')}
+                      className="p-1 text-gray-400 hover:text-blue-400 transition-colors"
+                      title="Copy số điện thoại"
+                    >
+                      {isCopied(order.id, 'phone') ? (
+                        <Check className="w-3.5 h-3.5 text-green-400" />
+                      ) : (
+                        <Copy className="w-3.5 h-3.5" />
+                      )}
+                    </button>
+                  </div>
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-300 max-w-xs truncate">
-                  {order.address}
+                  <div className="flex items-center gap-2">
+                    <span className="truncate">{order.address}</span>
+                    <button
+                      onClick={() => copyToClipboard(order.address, order.id, 'address', 'địa chỉ')}
+                      className="p-1 text-gray-400 hover:text-blue-400 transition-colors flex-shrink-0"
+                      title="Copy địa chỉ"
+                    >
+                      {isCopied(order.id, 'address') ? (
+                        <Check className="w-3.5 h-3.5 text-green-400" />
+                      ) : (
+                        <Copy className="w-3.5 h-3.5" />
+                      )}
+                    </button>
+                  </div>
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-300 max-w-xs truncate">
                   {order.note || '-'}
@@ -218,17 +281,50 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
               
               <div className="flex items-center text-sm text-gray-300">
                 <User className="w-4 h-4 mr-2 text-gray-400" />
-                <span>{order.customer_name}</span>
+                <span className="flex-1">{order.customer_name}</span>
+                <button
+                  onClick={() => copyToClipboard(order.customer_name, order.id, 'customer', 'tên khách hàng')}
+                  className="p-1 text-gray-400 hover:text-blue-400 transition-colors ml-2"
+                  title="Copy tên khách hàng"
+                >
+                  {isCopied(order.id, 'customer') ? (
+                    <Check className="w-3.5 h-3.5 text-green-400" />
+                  ) : (
+                    <Copy className="w-3.5 h-3.5" />
+                  )}
+                </button>
               </div>
               
               <div className="flex items-center text-sm text-gray-300">
                 <Phone className="w-4 h-4 mr-2 text-gray-400" />
-                <span>{order.phone}</span>
+                <span className="flex-1">{order.phone}</span>
+                <button
+                  onClick={() => copyToClipboard(order.phone, order.id, 'phone', 'số điện thoại')}
+                  className="p-1 text-gray-400 hover:text-blue-400 transition-colors ml-2"
+                  title="Copy số điện thoại"
+                >
+                  {isCopied(order.id, 'phone') ? (
+                    <Check className="w-3.5 h-3.5 text-green-400" />
+                  ) : (
+                    <Copy className="w-3.5 h-3.5" />
+                  )}
+                </button>
               </div>
               
               <div className="flex items-start text-sm text-gray-300">
                 <MapPin className="w-4 h-4 mr-2 text-gray-400 mt-0.5 flex-shrink-0" />
-                <span className="break-words">{order.address}</span>
+                <span className="break-words flex-1">{order.address}</span>
+                <button
+                  onClick={() => copyToClipboard(order.address, order.id, 'address', 'địa chỉ')}
+                  className="p-1 text-gray-400 hover:text-blue-400 transition-colors ml-2 flex-shrink-0 mt-0.5"
+                  title="Copy địa chỉ"
+                >
+                  {isCopied(order.id, 'address') ? (
+                    <Check className="w-3.5 h-3.5 text-green-400" />
+                  ) : (
+                    <Copy className="w-3.5 h-3.5" />
+                  )}
+                </button>
               </div>
               
               {order.note && (

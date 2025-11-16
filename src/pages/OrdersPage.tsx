@@ -190,6 +190,7 @@ const OrdersPage: React.FC = () => {
           allSelected={allSelected}
           onToggleSelectAll={handleToggleSelectAll}
           onToggleSelectOne={handleToggleSelectOne}
+          onShowToast={showToastMessage}
         />
       </div>
 
