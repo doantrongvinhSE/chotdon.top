@@ -42,7 +42,7 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
   };
 
   const copyOrderInfo = async (order: Order) => {
-    const textToCopy = `${order.customer_name}  ${order.phone}  ${order.address}`;
+    const textToCopy = `${order.customer_name}\t${order.phone}\t${order.address}`;
     try {
       await navigator.clipboard.writeText(textToCopy);
       setCopiedOrderId(order.id);
